@@ -24,10 +24,16 @@ async function run() {
     // await client.connect();
     // await client.db("admin").command({ ping: 1 });
     const database = client.db("stayInn");
-    const serviceCollection = database.collection("service");
+    const roomCollection = database.collection("rooms");
 
     app.get("/", (req, res) => {
       res.send("Hello World!");
+    });
+
+    app.get("/rooms", async (req, res) => {
+      const cursor = roomCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
     });
 
     console.log(
