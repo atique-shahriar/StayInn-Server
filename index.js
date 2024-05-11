@@ -43,18 +43,62 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/roomsAvailable", async (req, res) => {
+    // app.get("/roomsAvailable", async (req, res) => {
+    //   const query = {availability: true};
+    //   const options = {
+    //     projection: {_id: 1, availability: 1, image: 1, price_per_night: 1},
+    //   };
+
+    //   const cursor = roomCollection.find(query, options);
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
+
+    // app.get("/roomsAvailable/ascending", async (req, res) => {
+    //   const query = {availability: true};
+    //   const options = {
+    //     projection: {_id: 1, availability: 1, image: 1, price_per_night: 1},
+    //   };
+    //   const cursor = roomCollection
+    //     .find(query, options)
+    //     .sort({price_per_night: 1});
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
+
+    // app.get("/roomsAvailable/descending", async (req, res) => {
+    //   const query = {availability: true};
+    //   const options = {
+    //     projection: {_id: 1, availability: 1, image: 1, price_per_night: 1},
+    //   };
+    //   const cursor = roomCollection
+    //     .find(query, options)
+    //     .sort({price_per_night: -1});
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
+
+    app.get("/roomsAvailable/:sort", async (req, res) => {
+      const sorting = req.params.id;
+      console.log(sorting);
       const query = {availability: true};
       const options = {
         projection: {_id: 1, availability: 1, image: 1, price_per_night: 1},
       };
+      let cursor = roomCollection.find(query, options);
 
-      const cursor = roomCollection.find(query, options);
+      if (sorting == "ascending") {
+        cursor = roomCollection.find(query, options).sort({price_per_night: 1});
+      }
+
+      if (sorting == "descending") {
+        cursor = roomCollection
+          .find(query, options)
+          .sort({price_per_night: -1});
+      }
       const result = await cursor.toArray();
       res.send(result);
     });
-
-   
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
