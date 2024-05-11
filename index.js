@@ -1,6 +1,6 @@
 const express = require("express");
 var cors = require("cors");
-const {MongoClient, ServerApiVersion} = require("mongodb");
+const {MongoClient, ServerApiVersion, ObjectId} = require("mongodb");
 require("dotenv").config();
 
 const app = express();
@@ -32,6 +32,19 @@ async function run() {
 
     app.get("/rooms", async (req, res) => {
       const cursor = roomCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+
+
+    app.get("/roomsAvailable", async (req, res) => {
+      const query = {availability: true};
+      const options = {
+        projection: {_id: 1, availability: 1, image: 1, price_per_night: 1},
+      };
+
+      const cursor = roomCollection.find(query, options);
       const result = await cursor.toArray();
       res.send(result);
     });
