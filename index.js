@@ -36,7 +36,12 @@ async function run() {
       res.send(result);
     });
 
-
+    app.get("/room/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await roomCollection.findOne(query);
+      res.send(result);
+    });
 
     app.get("/roomsAvailable", async (req, res) => {
       const query = {availability: true};
@@ -48,6 +53,8 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+
+   
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
