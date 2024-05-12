@@ -152,6 +152,29 @@ async function run() {
       res.json(result);
     });
 
+    app.put("/bookedRooms/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = {_id: new ObjectId(id)};
+      const options = {upsert: true};
+      const updateDate = req.body;
+      console.log("Update Date", updateDate.date);
+      const spot = {
+        $set: {
+          date: updateDate.date,
+        },
+      };
+      const result = await bookedCollection.updateOne(filter, spot, options);
+      res.send(result);
+    });
+
+    app.delete("/bookedRooms/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await bookedCollection.deleteOne(query);
+      res.send(result);
+    });
+
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // await client.close();
