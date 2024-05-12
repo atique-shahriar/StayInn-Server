@@ -27,6 +27,7 @@ async function run() {
     const roomCollection = database.collection("rooms");
     const userCollection = database.collection("users");
     const bookedCollection = database.collection("bookedRooms");
+    const ratingsCollection = database.collection("ratings");
 
     app.get("/", (req, res) => {
       res.send("Hello World!");
@@ -109,7 +110,10 @@ async function run() {
     app.get("/roomsAvailable/:filter", async (req, res) => {
       const filtering = req.params.filter;
 
-      const highestNumber = await roomCollection.findOne({}, {sort: {price_per_night: -1}});
+      const highestNumber = await roomCollection.findOne(
+        {},
+        {sort: {price_per_night: -1}}
+      );
       let min = 0,
         max = highestNumber.price_per_night;
 
@@ -176,7 +180,21 @@ async function run() {
       res.send(result);
     });
 
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    app.post("/ratings", async (req, res) => {
+      const user = req.body;
+      const result = await ratingsCollection.insertOne(user);
+      res.json(result);
+    });
+
+    app.get("/ratings", async (req, res) => {
+      const cursor = ratingsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // await client.close();
   }
