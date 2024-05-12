@@ -72,6 +72,21 @@ async function run() {
       res.send(result);
     });
 
+    app.put("/rooms/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const ratingInfo = req.body;
+      const review = ratingInfo.bookedInfo;
+      const update = {
+        $push: {
+          reviews: review,
+        },
+      };
+
+      const result = await roomCollection.updateOne(filter, update);
+      res.send(result);
+    });
+
     // app.get("/roomsAvailable", async (req, res) => {
     //   const query = {availability: true};
     //   const options = {
