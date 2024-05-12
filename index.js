@@ -61,9 +61,10 @@ async function run() {
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)};
       const options = {upsert: true};
+      const updateAvailability = req.body;
       const spot = {
         $set: {
-          availability: false,
+          availability: updateAvailability.isAvailable,
         },
       };
       const result = await roomCollection.updateOne(filter, spot, options);
