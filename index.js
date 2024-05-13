@@ -1,13 +1,21 @@
 const express = require("express");
 var cors = require("cors");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const {MongoClient, ServerApiVersion, ObjectId} = require("mongodb");
 require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vbl1j76.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -31,6 +39,21 @@ async function run() {
 
     app.get("/", (req, res) => {
       res.send("Hello World!");
+    });
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "2h",
+      });
+
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: "none",
+        })
+        .send({success: true});
     });
 
     app.post("/users", async (req, res) => {
@@ -62,7 +85,7 @@ async function run() {
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)};
       const options = {upsert: true};
-      const updateAvailability = req.body;
+      const updateAvailability = req.body; //true
       const spot = {
         $set: {
           availability: updateAvailability.isAvailable,
@@ -125,7 +148,10 @@ async function run() {
     app.get("/roomsAvailable/:filter", async (req, res) => {
       const filtering = req.params.filter;
 
-      const highestNumber = await roomCollection.findOne({}, {sort: {price_per_night: -1}});
+      const highestNumber = await roomCollection.findOne(
+        {},
+        {sort: {price_per_night: -1}}
+      );
       let min = 0,
         max = highestNumber.price_per_night;
 
@@ -158,6 +184,7 @@ async function run() {
     });
 
     app.get("/bookedRooms", async (req, res) => {
+      console.log("Token", req.cookies.token);
       const cursor = bookedCollection.find();
       const result = await cursor.toArray();
       res.send(result);
@@ -210,7 +237,9 @@ async function run() {
       res.send(result);
     });
 
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // await client.close();
   }
