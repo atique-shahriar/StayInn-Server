@@ -27,6 +27,23 @@ const client = new MongoClient(uri, {
   },
 });
 
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  console.log("verify token", token);
+  if (!token) {
+    return res.status(401).send({message: "Not Authorized"});
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded) => {
+    if (error) {
+      console.log("Errorrrrrrr");
+      return res.status(401).send({message: "Unuthorized"});
+    }
+    console.log("value in token", decoded);
+    req.user = decoded;
+    next();
+  });
+};
+
 async function run() {
   try {
     // await client.connect();
@@ -42,16 +59,15 @@ async function run() {
     });
     app.post("/jwt", async (req, res) => {
       const user = req.body;
-      console.log(user);
+      console.log("jwt user", user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "2h",
+        expiresIn: "1h",
       });
 
       res
         .cookie("token", token, {
           httpOnly: true,
           secure: false,
-          sameSite: "none",
         })
         .send({success: true});
     });
@@ -148,10 +164,7 @@ async function run() {
     app.get("/roomsAvailable/:filter", async (req, res) => {
       const filtering = req.params.filter;
 
-      const highestNumber = await roomCollection.findOne(
-        {},
-        {sort: {price_per_night: -1}}
-      );
+      const highestNumber = await roomCollection.findOne({}, {sort: {price_per_night: -1}});
       let min = 0,
         max = highestNumber.price_per_night;
 
@@ -186,6 +199,23 @@ async function run() {
     app.get("/bookedRooms", async (req, res) => {
       console.log("Token", req.cookies.token);
       const cursor = bookedCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/book", verifyToken, async (req, res) => {
+      console.log("user in the valid token", req.user);
+      // console.log("token", req.cookies.token);
+      console.log(req.query.email, req.user.email);
+      if (req.query.email != req.user.email) {
+        return res.status(403).send({message: "forbidden access"});
+      }
+
+      let query = {};
+      if (req.query?.email) {
+        query = {email: req.query.email};
+      }
+      const cursor = bookedCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -237,9 +267,7 @@ async function run() {
       res.send(result);
     });
 
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // await client.close();
   }
