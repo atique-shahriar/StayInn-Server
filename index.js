@@ -10,7 +10,8 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://stayinn-3d14d.web.app", "https://stayinn-3d14d.firebaseapp.com"],
+
     credentials: true,
   })
 );
