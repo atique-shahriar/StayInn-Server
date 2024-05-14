@@ -10,7 +10,11 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://stayinn-3d14d.web.app", "https://stayinn-3d14d.firebaseapp.com"],
+    origin: [
+      "http://localhost:5173",
+      "https://stayinn-3d14d.web.app",
+      "https://stayinn-3d14d.firebaseapp.com",
+    ],
 
     credentials: true,
   })
@@ -58,6 +62,7 @@ async function run() {
     app.get("/", (req, res) => {
       res.send("Hello World!");
     });
+
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       console.log("jwt user", user);
@@ -68,7 +73,8 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({success: true});
     });
@@ -83,6 +89,12 @@ async function run() {
         const result = await userCollection.insertOne(user);
         res.send(result);
       }
+    });
+
+    app.get("/users", async (req, res) => {
+      const cursor = userCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
     });
 
     app.get("/rooms", async (req, res) => {
@@ -165,7 +177,10 @@ async function run() {
     app.get("/roomsAvailable/:filter", async (req, res) => {
       const filtering = req.params.filter;
 
-      const highestNumber = await roomCollection.findOne({}, {sort: {price_per_night: -1}});
+      const highestNumber = await roomCollection.findOne(
+        {},
+        {sort: {price_per_night: -1}}
+      );
       let min = 0,
         max = highestNumber.price_per_night;
 
@@ -197,6 +212,44 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/roomsAll/:filter", async (req, res) => {
+      const filtering = req.params.filter;
+
+      const highestNumber = await roomCollection.findOne(
+        {},
+        {sort: {price_per_night: -1}}
+      );
+      let min = 0,
+        max = highestNumber.price_per_night;
+
+      if (filtering.includes("-")) {
+        [min, max] = filtering.split("-").map(Number);
+      } else {
+        min = parseInt(filtering);
+      }
+      console.log("Filter", filtering);
+      console.log("Max, Min", max, min);
+      const query = {};
+      const options = {
+        projection: {_id: 1, availability: 1, image: 1, price_per_night: 1},
+      };
+
+      let cursor = roomCollection.find(query, options);
+
+      if (filtering != "all") {
+        cursor = roomCollection.find(
+          {
+            ...query,
+            price_per_night: {$gte: min, $lte: max},
+          },
+          options
+        );
+      }
+
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     app.get("/bookedRooms", async (req, res) => {
       console.log("Token", req.cookies.token);
       const cursor = bookedCollection.find();
@@ -206,7 +259,7 @@ async function run() {
 
     app.get("/book", verifyToken, async (req, res) => {
       console.log("user in the valid token", req.user);
-      // console.log("token", req.cookies.token);
+      console.log("token", req.cookies.token);
       console.log(req.query.email, req.user.email);
       if (req.query.email != req.user.email) {
         return res.status(403).send({message: "forbidden access"});
@@ -268,7 +321,9 @@ async function run() {
       res.send(result);
     });
 
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // await client.close();
   }
