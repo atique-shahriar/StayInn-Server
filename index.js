@@ -79,6 +79,19 @@ async function run() {
         .send({success: true});
     });
 
+    app.post("/jwtLogout", async (req, res) => {
+      const user = req.body;
+      console.log("logging out", user);
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      };
+      res
+        .clearCookie("token", {...cookieOptions, maxAge: 0})
+        .send({success: true});
+    });
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       const mail = user.userEmail;
