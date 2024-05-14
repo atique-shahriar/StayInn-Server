@@ -58,6 +58,7 @@ async function run() {
     const userCollection = database.collection("users");
     const bookedCollection = database.collection("bookedRooms");
     const ratingsCollection = database.collection("ratings");
+    const subscribersCollection = database.collection("subscriber");
 
     app.get("/", (req, res) => {
       res.send("Hello World!");
@@ -102,6 +103,12 @@ async function run() {
         const result = await userCollection.insertOne(user);
         res.send(result);
       }
+    });
+
+    app.post("/subscribers", async (req, res) => {
+      const user = req.body;
+      const result = await subscribersCollection.insertOne(user);
+      res.send(result);
     });
 
     app.get("/users", async (req, res) => {
