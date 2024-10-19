@@ -2,7 +2,7 @@
 <hr>
 <h3> Live Link: <a href="https://stayinn-3d14d.web.app/"> Stay Inn</a>
 </h3>
-<h4>Tools & Technologies: React, Node, Express, MongoDB, Firebase, Swiper Slider, Helmet, Leaflet, Animation Library AOS
+<h4>Tools & Technologies: React, Node, Express, MongoDB, Firebase, JWT Token, Swiper Slider, Helmet, Leaflet, Animation Library AOS
 
 
 </h4>
