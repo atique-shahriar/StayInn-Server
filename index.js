@@ -231,23 +231,17 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/book", verifyToken, async (req, res) => {
-      console.log("user in the valid token", req.user);
-      console.log("token", req.cookies.token);
-      console.log(req.query.email, req.user.email);
-      if (req.query.email != req.user.email) {
-        return res.status(403).send({message: "forbidden access"});
-      }
+    app.get("/book/:email", async (req, res) => {
+      console.log("user", req.params.email);
 
       let query = {};
-      if (req.query?.email) {
-        query = {email: req.query.email};
+      if (req.params.email) {
+        query = {email: req.params.email};
       }
       const cursor = bookedCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
     });
-
 
     app.post("/bookedRooms", async (req, res) => {
       const user = req.body;
